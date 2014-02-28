@@ -11,4 +11,4 @@ CREATE TABLE books(author varchar, title varchar, ISBN int, binding varchar, pri
 """
 
 with open("books_populate.sql", "wb") as out:
-    out.write(SQL.format(sys.argv[2]))
+    out.write(SQL.format(sys.argv[1]))

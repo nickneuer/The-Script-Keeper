@@ -32,13 +32,16 @@ class Flag(object):
     self.text = TEXT.format(later_week, earlier_week, refinement)   
     self.refinement = refinement 
     
-  def comps(self):    
+  def comps(self):
+    
     return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + COMPS))  
 
-  def spec_houses(self):    
+  def spec_houses(self):
+    
     return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + SPECIFIC_HOUSES))
 
-  def self_pub(self):    
+  def self_pub(self):
+    
     return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + SELF_PUB))
 
   def religion(self):   
@@ -59,3 +62,47 @@ class Flag(object):
     else: 
       return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + HEALTHY_COOKING))
 
+  def fitness(self):
+    if COMPS in self.text or SELF_PUB in self.text or SPECIFIC_HOUSES in self.text: 
+      return Flag(self.later_week, self.earlier_week, self.refinement.format('and ' + FITNESS))
+    else: 
+      return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + FITNESS))
+
+  def crafting(self):
+    if COMPS in self.text or SELF_PUB in self.text or SPECIFIC_HOUSES in self.text: 
+      return Flag(self.later_week, self.earlier_week, self.refinement.format('and ' + CRAFTING))
+    else: 
+      return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + CRAFTING))
+
+  def run_query(self):
+    table = c.execute(self.text.format(''))
+    for row in table:
+      print row
+  
+  def write_table(self):
+    table = c.execute(self.text.format(''))
+    rows = [row for row in table]
+    out_file = raw_input("choose out-file name")
+    with open(out_file, "wb") as f:
+      writer = csv.writer(f, delimiter = ',')
+      writer.writerows(rows)
+    
+  competitors = [comps, self_pub, spec_houses]
+
+  genres = [religion, health_n_diet, healthy_cooking, fitness, crafting]  
+    
+
+def run_all():
+  weeks = ['week9', 'week10', 'week11'] 
+  for week in weeks:
+    print ''
+    print 'comparing to week' + week
+    for f in Flag('week12', week).competitors:
+      print f
+      print ''
+      for g in Flag('week12', week).genres:
+        print ''
+        print g        
+        g(f(Flag('week12', week))).run_query()
+      print ''    
+    

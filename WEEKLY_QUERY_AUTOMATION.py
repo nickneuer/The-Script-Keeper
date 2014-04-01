@@ -26,22 +26,20 @@ CRAFTING = "(A.BISAC like 'CRA%') {}"
 class Flag(object):
 
   def __init__(self, later_week, earlier_week, refinement = '{}'):
-        
+
+    # refinement takes the form "(<normal text between where clause and order by> ) {}"     
     self.later_week = later_week
     self.earlier_week = earlier_week
     self.text = TEXT.format(later_week, earlier_week, refinement)   
     self.refinement = refinement 
     
-  def comps(self):
-    
+  def comps(self):    
     return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + COMPS))  
 
-  def spec_houses(self):
-    
+  def spec_houses(self):    
     return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + SPECIFIC_HOUSES))
 
-  def self_pub(self):
-    
+  def self_pub(self):    
     return Flag(self.later_week, self.earlier_week, self.refinement.format('where ' + SELF_PUB))
 
   def religion(self):   
@@ -86,23 +84,57 @@ class Flag(object):
     with open(out_file, "wb") as f:
       writer = csv.writer(f, delimiter = ',')
       writer.writerows(rows)
-    
-  competitors = [comps, self_pub, spec_houses]
 
-  genres = [religion, health_n_diet, healthy_cooking, fitness, crafting]  
+  def everything(self):
+    return self
     
+  competitors = [everything , comps, self_pub, spec_houses]
 
-def run_all():
-  weeks = ['week9', 'week10', 'week11'] 
-  for week in weeks:
-    print ''
-    print 'comparing to week' + week
-    for f in Flag('week12', week).competitors:
-      print f
+  genres = [everything, religion, health_n_diet, healthy_cooking, fitness, crafting]  
+
+  
+    
+def run_all(weeks):
+  # takes list of weeks, runs reports for all consecutive pairs   
+  if type(weeks) != list and type(weeks) != tuple: 
+    raise TypeError('arg of run_all must be a list or tuple')
+  else:
+    for i in range(1, len(weeks)):
       print ''
-      for g in Flag('week12', week).genres:
-        print ''
-        print g        
-        g(f(Flag('week12', week))).run_query()
-      print ''    
-    
+      print 'comparing ' + weeks[i] + ' to ' + weeks[i-1]
+      print ''
+      for f in Flag(weeks[i], weeks[i-1]).competitors:
+        print f.__name__
+        print '------------------------------------------------------------------------------------'
+        for g in Flag(weeks[i], weeks[i-1]).genres:          
+          print '     ' + g.__name__ + ':' 
+          print ''
+          g(f(Flag(weeks[i], weeks[i-1]))).run_query()
+          print ''  
+
+
+
+def write_all(weeks):
+  # takes list of weeks, runs reports for all consecutive pairs 
+  the_file = raw_input('choose name of file to write to')
+  if type(weeks) != list and type(weeks) != tuple: 
+    raise TypeError('arg of run_all must be a list or tuple')
+  else:
+    outfile = open(the_file, 'w')
+    for i in range(1, len(weeks)):
+      print >> outfile, ''
+      print >> outfile, 'comparing ' + weeks[i] + ' to ' + weeks[i-1]
+      print >> outfile, ''
+      for f in Flag(weeks[i], weeks[i-1]).competitors:
+        print >> outfile, f.__name__
+        print >> outfile, '------------------------------------------------------------------------------------'
+        for g in Flag(weeks[i], weeks[i-1]).genres:          
+          print >> outfile, '     ' + g.__name__ + ':' 
+          print >> outfile, ''
+          rows = [row for row in c.execute(g(f(Flag(weeks[i], weeks[i-1]))).text.format(''))]            
+          writer = csv.writer(outfile, delimiter = ',')
+          writer.writerows(rows)                      
+          print >> outfile, ''  
+    outfile.close()
+
+
